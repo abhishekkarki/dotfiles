@@ -88,6 +88,7 @@ Leader key is `<Space>`.
 | `<leader>ca` | Code action (quick fixes, refactors, `Add missing import`, etc.) |
 | `<leader>e` | Show diagnostic under cursor in a float |
 | `[d` / `]d` | Jump to previous / next diagnostic |
+| `<leader>xx` | List every error/warning across all open buffers (quickfix list) |
 | `<leader>gf` | Format buffer manually (also happens automatically on save) |
 
 ### Git (gitsigns)

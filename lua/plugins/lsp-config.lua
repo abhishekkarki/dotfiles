@@ -74,6 +74,11 @@ return {
       vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, {})
       vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, {})
       vim.keymap.set('n', ']d', vim.diagnostic.goto_next, {})
+      -- list every error/warning across all open buffers, like an IDE "Problems" panel
+      vim.keymap.set('n', '<leader>xx', function()
+        vim.diagnostic.setqflist()
+        vim.cmd('copen')
+      end, {})
 
       -- organize imports on save (goimports-equivalent via gopls,
       -- isort-equivalent via ruff). Requested per-client, since Python

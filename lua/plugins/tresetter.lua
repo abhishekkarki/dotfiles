@@ -8,7 +8,7 @@ return {
       return
     end
     configs.setup({
-      ensure_installed = { "lua", "go", "gomod", "gosum", "python" },
+      ensure_installed = { "lua", "go", "gomod", "gosum", "python", "markdown", "markdown_inline" },
       highlight = { enable = true },
       indent = { enable = true },
     })
