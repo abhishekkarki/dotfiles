@@ -9,7 +9,7 @@ return {
     "williamboman/mason-lspconfig.nvim",
     config = function()
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "golangci_lint_ls", "gopls", "pyright", "ruff" }
+        ensure_installed = { "lua_ls", "golangci_lint_ls", "gopls", "pyright", "ruff", "terraformls", "dockerls", "docker_compose_language_service" }
       })
     end
   },
@@ -52,11 +52,34 @@ return {
         end,
       }
 
+      -- terraformls: completion, validation and `terraform fmt` on save.
+      vim.lsp.config["terraformls"] = {
+        capabilities = capabilities,
+      }
+
+      vim.lsp.config["dockerls"] = {
+        capabilities = capabilities,
+      }
+
+      -- compose files need the yaml.docker-compose filetype to attach this server
+      vim.filetype.add({
+        pattern = {
+          ["compose%.ya?ml"] = "yaml.docker-compose",
+          ["docker%-compose.*%.ya?ml"] = "yaml.docker-compose",
+        },
+      })
+      vim.lsp.config["docker_compose_language_service"] = {
+        capabilities = capabilities,
+      }
+
       -- Enable servers
       vim.lsp.enable("lua_ls")
       vim.lsp.enable("gopls")
       vim.lsp.enable("pyright")
       vim.lsp.enable("ruff")
+      vim.lsp.enable("terraformls")
+      vim.lsp.enable("dockerls")
+      vim.lsp.enable("docker_compose_language_service")
 
       vim.diagnostic.config({
         virtual_text = true,
@@ -102,7 +125,7 @@ return {
       end
 
       vim.api.nvim_create_autocmd("BufWritePre", {
-        pattern = { "*.go", "*.py", "*.lua" },
+        pattern = { "*.go", "*.py", "*.lua", "*.tf", "*.tfvars" },
         callback = function(args)
           local ft = vim.bo[args.buf].filetype
           if ft == "go" or ft == "python" then

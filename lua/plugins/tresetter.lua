@@ -1,16 +1,20 @@
 return {
   'nvim-treesitter/nvim-treesitter',
+  branch = 'main',
+  lazy = false,
   build = ':TSUpdate',
 
   config = function()
-    local status_ok, configs = pcall(require, "nvim-treesitter.configs")
-    if not status_ok then
-      return
-    end
-    configs.setup({
-      ensure_installed = { "lua", "go", "gomod", "gosum", "python", "markdown", "markdown_inline" },
-      highlight = { enable = true },
-      indent = { enable = true },
+    -- main branch: install parsers, then start highlight/indent per buffer ourselves
+    local parsers = { "lua", "go", "gomod", "gosum", "python", "markdown", "markdown_inline", "terraform", "hcl", "yaml", "dockerfile" }
+    require('nvim-treesitter').install(parsers)
+
+    vim.api.nvim_create_autocmd('FileType', {
+      callback = function(args)
+        if pcall(vim.treesitter.start, args.buf) then
+          vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end
+      end,
     })
   end
 }
