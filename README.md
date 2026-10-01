@@ -22,7 +22,11 @@ lua/plugins/
   catppuccin.lua                    -- colorscheme
   gitsigns.lua                       -- git gutter signs, hunk stage/reset, blame
   none-ls.lua                         -- stylua formatting for Lua files
+  render-markdown.lua                  -- renders markdown in the buffer (headings, tables, code blocks)
+  vim-tmux-navigator.lua                -- <C-h/j/k/l> across nvim splits and tmux panes
 ```
+
+tmux's config lives outside this directory, at `~/.config/tmux/tmux.conf`.
 
 `lazy.nvim` is told to load the whole `plugins` module (`require("lazy").setup("plugins")`
 in `init.lua`); it globs every file under `lua/plugins/` automatically, so a
@@ -107,6 +111,77 @@ Leader key is `<Space>`.
 | `<CR>` | Confirm selected completion |
 | `<C-e>` | Abort/close completion menu |
 | `<C-f>` / `<C-b>` | Scroll docs preview down / up |
+
+### Splits (windows)
+Splits are built into Neovim; `splitright`/`splitbelow` make new ones open to
+the right and below, like VS Code.
+| Key | Action |
+|---|---|
+| `<C-w>v` / `<C-w>s` | Split side by side / below (or `:vs file` / `:sp file`) |
+| `<C-v>` / `<C-x>` | In Telescope: open the selected file side by side / below |
+| `s` / `S` | In Neo-tree: open the file side by side / below |
+| `<C-h>` `<C-j>` `<C-k>` `<C-l>` | Move to the split left / down / up / right (continues into tmux panes) |
+| `<C-w>=` | Make all splits equal size |
+| `<C-w>>` / `<C-w><` | Wider / narrower (takes a count, e.g. `10<C-w>>`) |
+| `<C-w>+` / `<C-w>-` | Taller / shorter |
+| `<C-w>o` | Close all other splits |
+| `<C-w>x` | Swap with the next split |
+| `:q` / `<C-w>c` | Close this split |
+| `<leader>tt` | Terminal in a split below; `<Esc><Esc>` returns to normal mode |
+
+### Markdown (render-markdown)
+| Key | Action |
+|---|---|
+| `:RenderMarkdown toggle` | Switch between rendered and raw markdown |
+
+### tmux (`~/.config/tmux/tmux.conf`)
+Every binding below starts with the prefix `<C-b>`: press it, release, then
+press the key. The exception is `<C-h/j/k/l>`, which needs no prefix.
+
+**Sessions** (one per project)
+| Command / key | Action |
+|---|---|
+| `tmux new -s infra` | New named session |
+| `tmux ls` | List sessions |
+| `tmux attach -t infra` / `tmux a` | Reattach to a session / the last one |
+| `prefix d` | Detach (everything keeps running) |
+| `prefix s` | Pick a session or window from a list |
+| `prefix $` | Rename the session |
+| `tmux kill-session -t infra` | Kill a session |
+
+**Windows** (like tabs)
+| Key | Action |
+|---|---|
+| `prefix c` | New window (in the current directory) |
+| `prefix 1`, `prefix 2`, … | Go to window 1, 2, … |
+| `prefix n` / `prefix p` | Next / previous window |
+| `prefix l` | Last window you were in |
+| `prefix ,` | Rename the window |
+| `prefix &` | Close the window |
+
+**Panes** (splits inside a window)
+| Key | Action |
+|---|---|
+| `prefix \|` / `prefix -` | Split side by side / below (in the current directory) |
+| `<C-h>` `<C-j>` `<C-k>` `<C-l>` | Move between panes, and into nvim splits |
+| `prefix H/J/K/L` | Resize (keep pressing to repeat), or drag the border with the mouse |
+| `prefix z` | Zoom this pane to the full window / restore |
+| `prefix !` | Move the pane into its own window |
+| `prefix Space` | Cycle pane layouts |
+| `prefix x` | Close the pane |
+
+**Scrolling, copying, misc**
+| Key | Action |
+|---|---|
+| Mouse wheel / `prefix [` | Scroll back (vim keys move in scroll mode) |
+| `v`, `y`, `q` | In scroll mode: start selection, copy, leave |
+| `prefix <C-l>` | Clear the shell (plain `<C-l>` moves to the right pane) |
+| `prefix r` | Reload the tmux config |
+
+A typical project layout: `tmux new -s infra`, window 1 runs `nvim .` (with
+nvim splits for code), window 2 is split into `terraform plan` and a shell,
+window 3 tails `docker compose logs -f`. `prefix d` to leave, `tmux a` to come
+back to exactly that.
 
 ### Everything else is stock Neovim
 This config doesn't remap core motions, so all of vim's native keys apply on
