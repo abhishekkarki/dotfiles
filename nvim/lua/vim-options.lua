@@ -26,6 +26,13 @@ opt.undofile = true
 opt.updatetime = 250
 opt.clipboard = "unnamedplus"
 
+-- no remote plugins are used; skipping providers avoids startup probing and
+-- the matching checkhealth warnings
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
+
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "python",
   callback = function()
