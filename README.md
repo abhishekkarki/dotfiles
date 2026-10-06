@@ -10,7 +10,8 @@ session) wrote and can read.
 ## Install (macOS or Linux)
 
 ```sh
-git clone <this-repo-url> ~/dotfiles
+git clone git@github.com:abhishekkarki/dotfiles.git ~/dotfiles
+# or, without an SSH key: git clone https://github.com/abhishekkarki/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 ./install.sh
 ```
