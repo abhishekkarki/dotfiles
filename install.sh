@@ -45,7 +45,7 @@ install_macos() {
 
   local missing=() pair
   for pair in git:git nvim:neovim tmux:tmux rg:ripgrep fd:fd tree-sitter:tree-sitter-cli \
-    node:node go:go python3:python; do
+    node:node go:go python3:python lazygit:lazygit; do
     have "${pair%%:*}" || missing+=("${pair#*:}")
   done
   if [ ${#missing[@]} -gt 0 ]; then
@@ -90,11 +90,11 @@ linux_packages() {
 
 # Official release builds, installed under ~/.local without root.
 linux_release_tools() {
-  local arch nvim_arch ts_arch node_arch go_arch tmp
+  local arch nvim_arch ts_arch node_arch go_arch lg_arch tmp
   arch="$(uname -m)"
   case "$arch" in
-    x86_64 | amd64) nvim_arch=x86_64 ts_arch=x64 node_arch=x64 go_arch=amd64 ;;
-    aarch64 | arm64) nvim_arch=arm64 ts_arch=arm64 node_arch=arm64 go_arch=arm64 ;;
+    x86_64 | amd64) nvim_arch=x86_64 ts_arch=x64 node_arch=x64 go_arch=amd64 lg_arch=x86_64 ;;
+    aarch64 | arm64) nvim_arch=arm64 ts_arch=arm64 node_arch=arm64 go_arch=arm64 lg_arch=arm64 ;;
     *) die "Unsupported CPU architecture: $arch" ;;
   esac
   tmp="$(mktemp -d)"
@@ -144,6 +144,15 @@ linux_release_tools() {
     ln -sf "$LOCAL/opt/go/bin/go" "$LOCAL/opt/go/bin/gofmt" "$LOCAL/bin/"
   fi
 
+  if ! have lazygit; then
+    local lg_version
+    lg_version="$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/jesseduffield/lazygit/releases/latest)"
+    lg_version="${lg_version##*/v}"
+    info "Installing lazygit $lg_version to $LOCAL/bin"
+    curl -fsSL "https://github.com/jesseduffield/lazygit/releases/download/v$lg_version/lazygit_${lg_version}_linux_$lg_arch.tar.gz" |
+      tar -xz -C "$LOCAL/bin" lazygit
+  fi
+
   rm -rf "$tmp"
 }
 
@@ -168,6 +177,12 @@ link_configs() {
   mkdir -p "$CONFIG"
   link "$DOTFILES/nvim" "$CONFIG/nvim"
   link "$DOTFILES/tmux" "$CONFIG/tmux"
+  if [ "$(uname -s)" = Darwin ]; then
+    mkdir -p "$HOME/Library/Application Support"
+    link "$DOTFILES/lazygit" "$HOME/Library/Application Support/lazygit"
+  else
+    link "$DOTFILES/lazygit" "$CONFIG/lazygit"
+  fi
   # tmux reads ~/.tmux.conf before ~/.config/tmux/tmux.conf
   [ ! -e "$HOME/.tmux.conf" ] || warn "$HOME/.tmux.conf exists and overrides tmux/tmux.conf; remove it to use this repo's config."
 }
@@ -210,7 +225,7 @@ main() {
   fi
 
   local tool
-  for tool in git nvim tmux rg make cc curl unzip tree-sitter node npm go python3; do
+  for tool in git lazygit nvim tmux rg make cc curl unzip tree-sitter node npm go python3; do
     have "$tool" || die "$tool is not installed (rerun without --no-deps, or install it by hand)."
   done
   nvim_ok || die "Neovim $(nvim_version) is too old; need >= $NVIM_MIN."

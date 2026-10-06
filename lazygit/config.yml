@@ -1,0 +1,4 @@
+# Inside nvim (<leader>gg), `e` on a file closes lazygit and opens the file in
+# that same nvim instead of a nested one; from a plain shell it opens nvim.
+os:
+  editPreset: nvim-remote

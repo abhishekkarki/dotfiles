@@ -1,4 +1,4 @@
-# dotfiles — Neovim + tmux
+# dotfiles — Neovim + tmux + lazygit
 
 A minimal, LSP-first Neovim setup for Go, Python, Lua, Terraform, Docker and
 Markdown, plus a tmux config that shares navigation keys with it. Plugin manager is
@@ -22,13 +22,14 @@ in place. It:
 1. **Installs system dependencies.** On macOS it uses Homebrew (and asks for
    the Xcode Command Line Tools if they're missing). On Linux it uses apt, dnf
    or pacman for the basics, and downloads official builds of Neovim,
-   tree-sitter, Node and Go into `~/.local` if the distro's versions are
+   tree-sitter, Node, Go and lazygit into `~/.local` if the distro's versions are
    missing or too old (no root needed for those). On distros with glibc
    older than 2.39 (Ubuntu 22.04, Debian 12, RHEL 9) tree-sitter has no
    working prebuilt binary, so it is compiled with Rust (installed to
    `~/.cargo` via rustup; adds ~2 minutes once).
 2. **Links the configs:** `~/.config/nvim` → `nvim/`, `~/.config/tmux` →
-   `tmux/`. Anything already at those paths is moved to `*.bak.<timestamp>`,
+   `tmux/`, and lazygit's config dir → `lazygit/` (`~/.config/lazygit` on
+   Linux, `~/Library/Application Support/lazygit` on macOS). Anything already at those paths is moved to `*.bak.<timestamp>`,
    not deleted.
 3. **Pre-installs everything nvim needs:** plugins at the exact versions in
    `nvim/lazy-lock.json`, the treesitter parsers, and all language servers
@@ -44,7 +45,7 @@ Afterwards:
   packages yourself.
 
 **Requirements the script checks for:** Neovim ≥ 0.12, tree-sitter CLI ≥
-0.26.1, git, make + a C compiler, curl, unzip, ripgrep, fd, tmux, Node ≥ 18
+0.26.1, git, make + a C compiler, curl, unzip, ripgrep, fd, tmux, lazygit, Node ≥ 18
 (pyright and the Docker servers run on it), Go ≥ 1.21 (gopls is built with
 it), Python 3 with venv (ruff). Terraform and Docker themselves are **not**
 installed. Completion and diagnostics work without them, but formatting
@@ -57,6 +58,7 @@ you want that.
 install.sh                  -- sets up a machine (see Install)
 bootstrap.lua                -- headless nvim step of install.sh: parsers + Mason tools
 tmux/tmux.conf                -- linked to ~/.config/tmux
+lazygit/config.yml             -- makes lazygit open files in the nvim it was launched from
 nvim/                          -- linked to ~/.config/nvim
   init.lua                    -- bootstraps lazy.nvim, loads vim-options + plugins
   lazy-lock.json               -- pinned plugin versions
@@ -184,9 +186,10 @@ file *names*). Telescope uses `ripgrep`, so it respects `.gitignore`.
 | `<leader>xx` | List every error/warning across all open buffers (quickfix list) |
 | `<leader>gf` | Format buffer manually (also happens automatically on save) |
 
-### Git (gitsigns)
+### Git
 | Key | Action |
 |---|---|
+| `<leader>gg` | Open lazygit in a floating window (`q` closes it) |
 | `]c` / `[c` | Jump to next / previous git hunk |
 | `<leader>hs` | Stage hunk |
 | `<leader>hr` | Reset hunk (discard change) |
@@ -334,11 +337,57 @@ nvim .
 4. **Run things next to the editor.** `<leader>tt` for a quick shell, or a
    tmux pane (`prefix |`) / window (`prefix c`) for long-running commands
    like `terraform plan`, tests or `docker compose logs -f`.
-5. **Review and commit.** `]c` / `[c` walk your changes, `<leader>hp` previews
-   a hunk, `<leader>hs` stages it, `<leader>hr` discards it. Commit from a
-   shell pane with `git commit`.
+5. **Review and commit.** `<leader>gg` opens lazygit: stage, commit and
+   push from there (see "Using git" below).
 6. **Leave.** `prefix d` detaches tmux; everything keeps running. `tmux a`
    brings it back exactly as it was.
+
+### Using git
+
+Two tools, each for what it's best at:
+
+- **gitsigns, while you edit.** The gutter marks changed lines. `]c` / `[c`
+  jump between changes, `<leader>hp` shows a change's diff, `<leader>hs`
+  stages just that change, `<leader>hr` throws it away, `<leader>hb` shows
+  who last changed the line.
+- **lazygit, for everything else.** `<leader>gg` opens it over the editor.
+  Panels are numbered 1–5 down the left (status, files, branches, commits,
+  stash); `[` / `]` switch tabs inside a panel, `?` lists every key for the
+  panel you're in.
+
+| In lazygit | Action |
+|---|---|
+| `j` / `k`, `Tab`, `1`–`5` | Move, switch panel, jump to panel |
+| `Space` | Stage / unstage the file (in Files) |
+| `a` | Stage / unstage everything |
+| `Enter` | Open the file's diff: `Space` stages the selected line, `a` switches to whole-hunk selection |
+| `c` | Commit (type message, `Enter`) |
+| `A` | Amend the last commit |
+| `e` | Edit the file: closes lazygit and opens it in this nvim |
+| `d` | Discard changes to the file |
+| `P` / `p` | Push / pull |
+| `n` (in Branches) | New branch; `Space` checks a branch out |
+| `s` / `g` | Stash all changes (in Files) / pop the selected stash (in Stash) |
+| `z` / `Z` | Undo / redo the last git action |
+| `q` | Quit back to nvim |
+
+**A typical change:**
+
+1. `<leader>gg`, Branches panel (`3`), `n`, name it `feature/x`, `q`.
+2. Edit and save as usual; gitsigns shows what you've changed.
+3. `<leader>gg`. In Files, `Enter` on a file shows its diff; stage what
+   belongs in this commit, `c`, write the message.
+4. `P` to push. The first push of a new branch sets its upstream for you.
+5. Open the pull request on GitHub, merge, then in lazygit check out
+   `main` (`Space` in Branches) and `p` to pull.
+
+Telescope covers quick lookups without leaving the editor:
+`:Telescope git_status` (changed files with diff preview),
+`:Telescope git_bcommits` (history of the current file), and
+`:Telescope git_branches`.
+
+The plain `git` CLI still works everywhere (`<leader>tt` or a tmux pane);
+lazygit is a front end for it, not a replacement.
 
 ### Keeping this repo in sync across machines
 
